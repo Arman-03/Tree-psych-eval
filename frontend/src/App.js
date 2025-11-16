@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -39,15 +39,21 @@ function Navigation() {
   );
 }
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+  const isAdminPage = location.pathname === '/admin';
+  const isUploaderPage = location.pathname === '/uploader';
+  const isAssessorPage = location.pathname === '/assessor';
+  const isDashboardPage = isAdminPage || isUploaderPage || isAssessorPage;
+
   return (
-    <Router>
-      <AuthProvider>
-        <Navigation />
-        <div className="container mt-4">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
+    <>
+      {!isLoginPage && !isDashboardPage && <Navigation />}
+      <div className={isLoginPage || isDashboardPage ? '' : 'container mt-4'}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
 
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['Admin']}>
@@ -66,6 +72,15 @@ function App() {
             } />
           </Routes>
         </div>
+      </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
       </AuthProvider>
     </Router>
   );
