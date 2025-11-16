@@ -1,0 +1,171 @@
+/* Main container styling */
+.assessor-container {
+  background-color: #e0f2f1; /* Pale teal background */
+  padding: 2rem;
+  border-radius: 15px;
+  font-family: 'Georgia', serif;
+  color: #333;
+}
+
+body {
+  background-color: #e0f2f1;
+}
+
+.welcome-card, .dashboard-card, .review-page {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.foundation-logo {
+  max-width: 250px;
+  margin-bottom: 1rem;
+}
+
+/* Dashboard View Styling */
+.dashboard-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-button {
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: #dcedc8; /* Light green */
+  color: #558b2f; /* Darker green */
+}
+
+.tab-button.active {
+  background-color: #4dd0e1; /* Active blue */
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.queue-info {
+    color: #555;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.case-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.case-table th, .case-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+.case-table th {
+    color: #777;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+.case-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.case-table tbody tr:hover {
+    background-color: #f7fdfc;
+}
+
+.status-flagged { color: #d32f2f; font-weight: bold; }
+.status-followup { color: #d32f2f; font-weight: bold; }
+.status-completed { color: #388e3c; font-weight: bold; }
+.status-screening { color: #f57c00; font-weight: bold; }
+
+/* Review View Styling */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.back-button {
+    background: #e0e0e0;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.review-card {
+    border: 1px solid #e0f2f1;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.drawing-placeholder {
+    background-color: #f1f8e9; /* Very light green */
+    border: 2px dashed #c5e1a5;
+    border-radius: 8px;
+    padding: 4rem 1rem;
+    text-align: center;
+    color: #7cb342;
+}
+
+.ml-analysis ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.ml-analysis li::before {
+    content: '✺'; /* Sparkle icon */
+    color: #4dd0e1;
+    font-weight: bold;
+    display: inline-block; 
+    width: 1em;
+    margin-left: -1em;
+}
+
+.review-card h4 {
+    margin-bottom: 1rem;
+}
+
+.final-report-textarea {
+    min-height: 150px;
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.btn-flag {
+    background-color: #c62828; /* Dark red */
+    color: white;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-save {
+    background-color: #e6ee9c; /* Light lime green */
+    color: #558b2f;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+

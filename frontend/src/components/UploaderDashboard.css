@@ -1,0 +1,152 @@
+/* Main Uploader Container */
+.uploader-container {
+    background-color: #e0f2f1;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.uploader-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.uploader-logo {
+    max-height: 60px;
+}
+
+body {
+    background-color: #e0f2f1;
+}
+
+/* Card Styling */
+.uploader-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 450px;
+}
+
+.uploader-card h1 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.uploader-card .subtitle {
+    text-align: center;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+/* Buttons */
+.uploader-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 1rem;
+    transition: transform 0.2s;
+}
+.uploader-btn:hover {
+    transform: translateY(-2px);
+}
+.btn-primary-upload {
+    background-color: #4dd0e1;
+    color: white;
+}
+.btn-secondary-upload {
+    background-color: #e6ee9c;
+    color: #558b2f;
+}
+
+/* Upload Form Styling */
+.upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.upload-back-button {
+    background: #e0e0e0;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.image-dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: #888;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+.image-dropzone img {
+    max-width: 100%;
+    max-height: 150px;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+.form-group input, .form-group textarea {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Submission Status Styling */
+.status-screening { color: #f57c00; font-weight: bold; } /* Orange color for processing */
+
+/* Submission Status Table */
+.submission-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+}
+.submission-table tr {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden; /* For border-radius to work on table rows */
+}
+.submission-table th, .submission-table td {
+    padding: 1rem;
+    text-align: left;
+}
+.submission-table th {
+    font-size: 0.9rem;
+    color: #555;
+    text-transform: uppercase;
+}
+.submission-table td {
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+.submission-table td:first-child { border-left: 1px solid #eee; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.submission-table td:last-child { border-right: 1px solid #eee; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+
+.status-followup { color: #d32f2f; font-weight: bold; }
+.status-completed { color: #388e3c; font-weight: bold; }
