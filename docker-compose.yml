@@ -60,7 +60,8 @@ services:
       - tree-psych-network
     volumes:
       - ./ml-api:/app
-      - /home/akmal-ali/miniconda3:/home/akmal-ali/miniconda3:ro
+      - /usr:/usr:ro
+      - /home/arman/.conda:/home/arman/.conda:ro 
     restart: unless-stopped
 
 networks:

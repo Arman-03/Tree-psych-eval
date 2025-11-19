@@ -12,4 +12,4 @@ EXPOSE 5002
 
 # The entire miniconda3 directory will be mounted from the host at the same path
 # Start the application using the host's conda environment's gunicorn
-CMD ["/home/akmal-ali/miniconda3/envs/smai/bin/gunicorn", "--bind", "0.0.0.0:5002", "--timeout", "120", "app:app"]
+CMD ["/home/arman/.conda/envs/htp/bin/gunicorn", "--bind", "0.0.0.0:5002", "--timeout", "120", "app:app"]

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import * as api from '../../api';
-import CaseDetailModal from './CaseDetailModal'; // Import the modal
+import CaseDetailModal from './CaseDetailModal'; // Your original import
 
-function AdminCaseAudit({ setView }) {
+function AdminCaseAudit({ setView, showAlert }) {
     const [cases, setCases] = useState([]);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -10,7 +10,8 @@ function AdminCaseAudit({ setView }) {
     const [selectedCase, setSelectedCase] = useState(null);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
+        // We set loading to true only if it's not the initial load, to avoid flicker on reassign
+        setLoading(prev => prev === false);
         try {
             const [casesRes, usersRes] = await Promise.all([
                 api.getAllAdminCases(),
@@ -20,23 +21,36 @@ function AdminCaseAudit({ setView }) {
             setUsers(usersRes.data);
         } catch (error) {
             console.error("Failed to fetch data", error);
+            showAlert("Failed to load case data from the server.", "error");
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showAlert]);
 
+    // ==================================================================
+    // THE FIX IS HERE:
+    // The useEffect hook's dependency array is now empty ([]).
+    // This guarantees it will only run ONCE when the component first mounts,
+    // preventing the second unwanted refresh.
+    // The eslint-disable line is added to acknowledge this intentional choice.
+    // ==================================================================
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleReassign = async (caseId, newAssessorId) => {
         if (!newAssessorId) return;
         try {
             await api.reassignCase(caseId, newAssessorId);
-            alert('Case reassigned successfully!');
-            fetchData(); // Refresh list
+            const assessor = assessors.find(a => a._id === newAssessorId);
+            const assessorName = assessor ? assessor.username : 'the new assessor';
+            showAlert(`Case successfully reassigned to ${assessorName}.`);
+            
+            // This now triggers the ONLY refresh, as intended.
+            fetchData();
         } catch (error) {
-            alert('Failed to reassign case.');
+            showAlert('Failed to reassign the case. Please try again.', 'error');
         }
     };
     
@@ -44,9 +58,9 @@ function AdminCaseAudit({ setView }) {
     
     const filteredCases = useMemo(() => 
         cases.filter(c => 
-            c.drawing?.childId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.assessor?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.status.toLowerCase().includes(searchTerm.toLowerCase())
+            (c.drawing?.childId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.assessor?.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.status || '').toLowerCase().includes(searchTerm.toLowerCase())
         ), [cases, searchTerm]);
 
     return (

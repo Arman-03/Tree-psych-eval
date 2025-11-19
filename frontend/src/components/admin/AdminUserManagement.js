@@ -152,7 +152,7 @@ function AdminUserManagement({ setView }) {
                                     <tr key={user._id}>
                                         <td>
                                             <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
-                                                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600'}}>
+                                                <div style={{width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(16, 185, 129) 0%, rgb(5, 150, 105) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '600'}}>
                                                     {user.username.charAt(0).toUpperCase()}
                                                 </div>
                                                 <span style={{fontWeight: '600', color: '#1e293b'}}>{user.username}</span>

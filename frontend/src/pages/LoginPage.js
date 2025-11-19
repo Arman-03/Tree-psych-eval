@@ -2,9 +2,48 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './LoginPage.css';
 
+// A dedicated component for the thematic SVG Tree. This keeps the main component clean.
+const ThematicTree = () => (
+  <svg 
+    viewBox="0 0 200 200" 
+    xmlns="http://www.w3.org/2000/svg" 
+    style={{ width: '100%', maxWidth: '280px', height: 'auto', margin: '0 auto 20px auto', display: 'block' }}
+  >
+    <path 
+      d="M100 180 V 70 M100 70 C 80 70, 70 50, 50 50 M100 70 C 120 70, 130 50, 150 50 M50 50 C 30 50, 20 30, 40 20 M50 50 C 70 50, 70 30, 60 20 M150 50 C 170 50, 180 30, 160 20 M150 50 C 130 50, 130 30, 140 20"
+      stroke="currentColor" 
+      strokeWidth="5" 
+      strokeLinecap="round"
+      fill="none" 
+    />
+  </svg>
+);
+
+
+// Reusable component for form inputs
+const FormInput = ({ label, type, name, value, onChange, placeholder, disabled }) => (
+  <div className="form-group">
+    <label htmlFor={name} className="form-label">{label}</label>
+    <input
+      id={name}
+      type={type}
+      name={name}
+      className="form-input"
+      onChange={onChange}
+      value={value}
+      placeholder={placeholder}
+      required
+      disabled={disabled}
+      autoComplete={type === 'password' ? 'current-password' : name}
+    />
+  </div>
+);
+
+
 function LoginPage() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { login } = useAuth();
 
   const handleChange = (e) => {
@@ -14,8 +53,13 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+
     try {
       await login(formData);
+    } catch (err) {
+      setError('Login failed. Please check your username and password.');
+      console.error("Login error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -24,99 +68,56 @@ function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-container">
-        <div className="login-left">
+        {/* --- Left Panel with Thematic Visual and Text --- */}
+        <div className="login-left" style={{ textAlign: 'center' }}>
+          <ThematicTree />
           <div className="login-brand">
-            <div className="brand-icon">
-              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M50 10 L35 35 L20 35 L20 55 L50 55 L65 35 L80 35 L80 55 L50 90 L20 55" 
-                      stroke="currentColor" strokeWidth="3" fill="none"/>
-                <circle cx="50" cy="25" r="8" fill="currentColor"/>
-              </svg>
-            </div>
-            <h1>HTP Analysis Platform</h1>
-            <p className="brand-subtitle">ML-Assisted Psychological Assessment</p>
-          </div>
-          
-          <div className="login-info">
-            <div className="info-card">
-              <h3>House-Tree-Person</h3>
-              <p>Advanced AI-powered analysis of children's projective drawings for early psychological screening</p>
-            </div>
-            
-            <div className="info-features">
-              <div className="feature-item">
-                <span className="feature-bullet">✓</span>
-                <span>Secure role-based access control</span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-bullet">✓</span>
-                <span>AI-assisted preliminary screening</span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-bullet">✓</span>
-                <span>Expert assessor review workflow</span>
-              </div>
-              <div className="feature-item">
-                <span className="feature-bullet">✓</span>
-                <span>Comprehensive case management</span>
-              </div>
-            </div>
+            <h1>HTP Interpretation Platform</h1>
+            <p className="brand-subtitle">
+              A digital workspace for structured psychological assessment.
+            </p>
           </div>
         </div>
 
+        {/* --- Right Panel (Login Form) --- */}
         <div className="login-right">
           <div className="login-form-wrapper">
             <div className="login-header">
               <h2>Welcome Back</h2>
-              <p>Sign in to access your dashboard</p>
+              <p>Sign in to access your dashboard.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">👤</span>
-                  Username
-                </label>
-                <input 
-                  type="text" 
-                  name="username" 
-                  className="form-input" 
-                  onChange={handleChange}
-                  value={formData.username}
-                  placeholder="Enter your username"
-                  required 
-                  disabled={isLoading}
-                  autoComplete="username"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  <span className="label-icon">🔒</span>
-                  Password
-                </label>
-                <input 
-                  type="password" 
-                  name="password" 
-                  className="form-input" 
-                  onChange={handleChange}
-                  value={formData.password}
-                  placeholder="Enter your password"
-                  required 
-                  disabled={isLoading}
-                  autoComplete="current-password"
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-login" 
+              <FormInput
+                label="Username"
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Enter your username"
                 disabled={isLoading}
-              >
+              />
+              <FormInput
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                disabled={isLoading}
+              />
+
+              {error && (
+                <p style={{ color: '#D32F2F', textAlign: 'center', marginTop: '-10px', fontSize: '0.9rem' }}>
+                  {error}
+                </p>
+              )}
+
+              <button type="submit" className="btn-login" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <span className="spinner"></span>
-                    Signing in...
+                    <span className="spinner" style={{ marginRight: '8px' }}></span>
+                    <span>Signing In...</span>
                   </>
                 ) : (
                   'Sign In'
@@ -126,10 +127,7 @@ function LoginPage() {
 
             <div className="login-footer">
               <p className="help-text">
-                Need help? Contact your system administrator
-              </p>
-              <p className="security-notice">
-                🔐 All connections are encrypted and secure
+                Need help? Contact your system administrator.
               </p>
             </div>
           </div>

@@ -6,8 +6,10 @@ const { addJobToQueue } = require('../services/jobQueue.service'); // <-- Import
 // @desc    Submit a new drawing
 // @route   POST /api/drawings
 // @access  Private (Uploader)
+// const uploadedId = req.user.id;
+
 exports.submitDrawing = async (req, res) => {
-  const { childId, childAge, teacherNotes } = req.body;
+  const { childId, childAge, childName, childClass, teacherNotes } = req.body;
   const uploaderId = req.user.id;
 
   if (!req.file) {
@@ -20,8 +22,11 @@ exports.submitDrawing = async (req, res) => {
       uploader: uploaderId,
       childId,
       childAge,
+      childName,
+      childClass,
       teacherNotes,
       imageURL: req.file.path,
+      uploadedBy: req.user.id,
     });
 
     // 2. Create an initial Case record with "Initial Screening" status
@@ -55,7 +60,7 @@ exports.submitDrawing = async (req, res) => {
 // @access  Private (Uploader)
 exports.getMyDrawings = async (req, res) => {
     try {
-        const drawings = await Drawing.find({ uploader: req.user.id }).sort({ createdAt: -1 });
+        const drawings = await Drawing.find({ uploadedBy: req.user.id }).sort({ createdAt: -1 });
 
         // For each drawing, find its corresponding case
         const drawingsWithCases = await Promise.all(drawings.map(async (drawing) => {

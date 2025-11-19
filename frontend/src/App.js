@@ -53,18 +53,18 @@ function AppContent() {
       <div className={isLoginPage || isDashboardPage ? '' : 'container mt-4'}>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin" element={
+          <Route path="/login/*" element={<LoginPage />} />
+          <Route path="/admin/*" element={
             <ProtectedRoute allowedRoles={['Admin']}>
               <AdminDashboard />
             </ProtectedRoute>
           } />
-          <Route path="/assessor" element={
+          <Route path="/assessor/*" element={
             <ProtectedRoute allowedRoles={['Assessor']}>
               <AssessorDashboard />
             </ProtectedRoute>
           } />
-          <Route path="/uploader" element={
+          <Route path="/uploader/*" element={
             <ProtectedRoute allowedRoles={['Uploader']}>
               <UploaderDashboard />
             </ProtectedRoute>

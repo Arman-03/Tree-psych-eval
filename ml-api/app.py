@@ -11,7 +11,9 @@ import requests
 from io import BytesIO
 import cv2
 import numpy as np
-
+# from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+# from sentence_transformers import SentenceTransformer, util
+# from typing import List, Dict, Optional
 
 # --- 1. INITIAL SETUP & CONFIGURATION ---
 
@@ -23,13 +25,13 @@ app = Flask(__name__)
 try:
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
     gemini_model = genai.GenerativeModel('gemini-2.5-flash')
-    print("✅ Gemini Flash model configured successfully.")
+    print("Gemini Flash model configured successfully.")
 
     # Test the model with a simple request to ensure it's working
     gemini_model.generate_content("test")
-    print("✅ Gemini Flash model configured and tested successfully.")
+    print("Gemini Flash model configured and tested successfully.")
 except Exception as e:
-    print(f"🔥 ERROR: Failed to configure Gemini. Check your API key. Error: {e}")
+    print(f"ERROR: Failed to configure Gemini. Check your API key. Error: {e}")
     gemini_model = None
 
 # --- 2. SETUP THE "SEER" (EFFICIENTNET MODEL) ---
@@ -49,7 +51,7 @@ NUM_LABELS = len(LABEL_NAMES)
 MODEL_SAVE_PATH = "models/best_htp_classifier.pth"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"🧠 Using device: {device}")
+print(f"Using device: {device}")
 
 # Load the model structure
 seer_model = timm.create_model("efficientnet_b0", pretrained=False)
@@ -60,9 +62,9 @@ try:
     seer_model.load_state_dict(torch.load(MODEL_SAVE_PATH, map_location=device))
     seer_model.to(device)
     seer_model.eval()
-    print(f"✅ 'Seer' (EfficientNet) model loaded from {MODEL_SAVE_PATH}.")
+    print(f"'Seer' (EfficientNet) model loaded from {MODEL_SAVE_PATH}.")
 except FileNotFoundError:
-    print(f"🔥 ERROR: Model weights not found at {MODEL_SAVE_PATH}. The API will not work.")
+    print(f"ERROR: Model weights not found at {MODEL_SAVE_PATH}. The API will not work.")
     seer_model = None
 
 # Define the image transforms (must match validation transform)
@@ -85,7 +87,7 @@ def load_knowledge_file(path):
         with open(path, 'r', encoding='utf-8') as f:
             data = f.read()
         if data.strip():
-            print(f"✅ Loaded RAG knowledge from file: {path} ({len(data)} chars)")
+            print(f"Loaded RAG knowledge from file: {path} ({len(data)} chars)")
             return data
         else:
             print(f"ERROR: Knowledge file {path} is empty.")
@@ -100,7 +102,7 @@ def load_knowledge_file(path):
 # Load knowledge base from file
 RAG_CONTEXT = load_knowledge_file(KNOWLEDGE_FILE)
 if not RAG_CONTEXT:
-    print("⚠️ WARNING: No knowledge base loaded. RAG pipeline will not work properly.")
+    print("WARNING: No knowledge base loaded. RAG pipeline will not work properly.")
 
 
 # --- 4. RAG PIPELINE: EMBEDDING & RETRIEVAL ---
@@ -165,7 +167,7 @@ def build_vector_store_from_rag(rag_text):
         if emb:
             VECTOR_STORE.append({'text': chunk, 'embedding': emb})
     
-    print(f"✅ Vector store built with {len(VECTOR_STORE)} embeddings.")
+    print(f"Vector store built with {len(VECTOR_STORE)} embeddings.")
 
 def cosine_similarity(a, b):
     """Compute cosine similarity between two vectors."""
@@ -179,7 +181,24 @@ def cosine_similarity(a, b):
     except Exception:
         return 0.0
 
-def retrieve_relevant_context(detected_features, top_k=5):
+# def cosine_similarity(a, b):
+#     """Compute cosine similarity between two vectors using NumPy."""
+#     # Convert lists to numpy arrays if they aren't already
+#     vec_a = np.array(a)
+#     vec_b = np.array(b)
+
+#     # Calculate dot product and norms
+#     dot_product = np.dot(vec_a, vec_b)
+#     norm_a = np.linalg.norm(vec_a)
+#     norm_b = np.linalg.norm(vec_b)
+
+#     # Handle zero vectors to avoid division by zero
+#     if norm_a == 0 or norm_b == 0:
+#         return 0.0
+    
+#     return dot_product / (norm_a * norm_b)
+
+def retrieve_relevant_context(detected_features, top_k=7):
     """Retrieve top_k most relevant knowledge chunks for detected features."""
     if not VECTOR_STORE:
         print("Vector store empty; returning full RAG_CONTEXT as fallback.")
@@ -210,17 +229,34 @@ def generate_gemini_report_RAG(detected_features, retrieved_context):
     if not gemini_model:
         return "LLM not configured."
     
+    # system_prompt = (
+    #     "You are an expert clinical psychologist specializing in the HTP (House-Tree-Person) "
+    #     "projective test. Your task is to interpret observed features from a tree drawing using "
+    #     "ONLY the provided relevant knowledge base. Be clinical, objective, and concise. "
+    #     "Do not add preamble or conclusions."
+    # )
     system_prompt = (
-        "You are an expert clinical psychologist specializing in the HTP (House-Tree-Person) "
-        "projective test. Your task is to interpret observed features from a tree drawing using "
-        "ONLY the provided relevant knowledge base. Be clinical, objective, and concise. "
-        "Do not add preamble or conclusions."
+        "You are an expert clinical psychologist specializing in the HTP (House-Tree-Person) projective test. "
+        "Your task is to synthesize information from a list of detected features and a relevant knowledge base. "
+        "Your analysis must be comprehensive, objective, and structured EXACTLY as follows, using markdown for headers:\n\n"
+        "### Summary\n"
+        "(Provide a 2-3 sentence high-level summary of the key findings and overall impression.)\n\n"
+        "### Detailed Analysis\n"
+        "(Go through each of the 'Detected Features'. For each feature, explain its potential psychological meaning, referencing the 'Relevant Knowledge Base'.)\n\n"
+        "### Recommendations\n"
+        "(Based on the analysis, provide a clear recommendation. State either 'No significant concerns noted at this time' OR 'Follow-up consultation is recommended to further explore potential indicators of...' and briefly state why.)"
     )
     
+    # user_prompt = (
+    #     f"--- RELEVANT KNOWLEDGE ---\n{retrieved_context}\n--- END KNOWLEDGE ---\n\n"
+    #     f"A vision model detected the following visual features: {detected_features}\n\n"
+    #     f"Psychological Interpretation:"
+    # )
     user_prompt = (
-        f"--- RELEVANT KNOWLEDGE ---\n{retrieved_context}\n--- END KNOWLEDGE ---\n\n"
-        f"A vision model detected the following visual features: {detected_features}\n\n"
-        f"Psychological Interpretation:"
+        f"--- RELEVANT KNOWLEDGE BASE ---\n{retrieved_context}\n\n"
+        f"--- DETECTED FEATURES ---\n{', '.join(detected_features)}\n\n"
+        f"--- TASK ---\n"
+        "Generate the structured psychological report based on all the information above."
     )
     
     full_prompt = f"{system_prompt}\n\n{user_prompt}"
@@ -258,7 +294,8 @@ def analyze_size_and_placement(pil_image):
         
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # This threshold assumes a light background (like white paper)
-        _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+        # _, thresh = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+        thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 15, 2)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         geometric_labels = []
@@ -268,7 +305,8 @@ def analyze_size_and_placement(pil_image):
             
             size_ratio = (w * h) / image_area
             # You can tune these thresholds if needed
-            if size_ratio >= 0.50: geometric_labels.append("SIZE: Large")
+            if size_ratio >= 0.60: geometric_labels.append("SIZE: Very Large")
+            elif size_ratio >= 0.50: geometric_labels.append("SIZE: Large")
             elif size_ratio < 0.20: geometric_labels.append("SIZE: Small")
 
             center_x, center_y = x + w / 2, y + h / 2
@@ -297,7 +335,7 @@ def analyze_size_and_placement(pil_image):
                 geometric_labels.append("PLACEMENT: Center")
                 
     except Exception as e:
-        print(f"🔥 Geometry analysis failed: {e}")
+        print(f"Geometry analysis failed: {e}")
         return []
     return geometric_labels
 
@@ -351,7 +389,7 @@ def analyze_drawing_endpoint():
             # Generate interpretation using only retrieved context
             final_analysis = generate_gemini_report_RAG(predicted_labels, retrieved_context)
         except Exception as e:
-            print(f"🔥 RAG pipeline failed: {e}")
+            print(f"RAG pipeline failed: {e}")
             final_analysis = f"LLM analysis failed. Raw features detected: {predicted_labels}"
 
 
