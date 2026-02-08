@@ -1,159 +1,193 @@
+# DSI Platform - HTP Interpretation System
 
+A full-stack ML-assisted platform for psychological interpretation of House-Tree-Person (HTP) drawings. Built with React, Node.js/Express, and Python/Flask with PyTorch.
 
-# DSI Platform - Dockerized Full Stack Application
+## Quick Start
 
-This repository contains the full-stack source code for the Design for Social Innovation (DSI) ML-Assisted HTP Interpretation Platform. The entire architecture is containerized using Docker and managed with Docker Compose for easy setup and development.
+### Development
+```bash
+# Clone and configure
+cp .env.example .env  # Edit with your credentials
 
-### Table of Contents
-1.  [Project Overview](#project-overview)
-2.  [Architecture](#architecture)
-3.  [Prerequisites](#prerequisites)
-4.  [One-Time Setup (Host Machine)](#one-time-setup-host-machine)
-    -   [Install Docker](#install-docker)
-    -   [Configure Docker Permissions (Linux Only)](#configure-docker-permissions-linux-only)
-5.  [Configuration](#configuration)
-    -   [Backend & Database](#backend--database)
-    -   [ML API (Google Gemini)](#ml-api-google-gemini)
-    -   [Conda Environment Volume (ML API)](#conda-environment-volume-ml-api)
-6.  [Running the Application](#running-the-application)
-7.  [Stopping the Application](#stopping-the-application)
-8.  [Development Workflow](#development-workflow)
-9.  [Troubleshooting](#troubleshooting)
+# Start all services
+docker compose up --build
+```
+
+### Production
+```bash
+# Build and run production stack
+docker compose -f docker-compose.prod.yml up --build -d
+
+# Check health
+curl http://localhost:5001/health  # Backend
+curl http://localhost:5002/health  # ML-API
+```
+
+**Services:**
+| Service | Dev Port | Prod Port |
+|---------|----------|-----------|
+| Frontend | 3000 | 80 |
+| Backend | 5001 | 5001 |
+| ML-API | 5002 | 5002 |
 
 ---
 
-### Project Overview
+## Table of Contents
+1. [Architecture](#architecture)
+2. [Prerequisites](#prerequisites)
+3. [Configuration](#configuration)
+4. [Development](#development)
+5. [Production Deployment](#production-deployment)
+6. [Troubleshooting](#troubleshooting)
 
-This project is a web-based platform designed to assist psychologists in interpreting House-Tree-Person (HTP) drawings. It uses a Machine Learning pipeline to provide preliminary analysis, which is then reviewed by a human expert.
+---
 
-### Architecture
+## Architecture
 
-The application is composed of three separate services orchestrated by Docker Compose:
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Frontend   │────▶│   Backend   │────▶│   ML-API    │
+│   (React)   │     │  (Express)  │     │   (Flask)   │
+│   Nginx     │     │   Node.js   │     │   PyTorch   │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │  MongoDB    │
+                    │  Cloudinary │
+                    └─────────────┘
+```
 
-1.  **`frontend`**: A React single-page application served by Nginx. It provides the user interface for all roles (Uploader, Assessor, Admin).
-2.  **`backend`**: A Node.js/Express RESTful API server. It handles user authentication, business logic, case management, and database interactions.
-3.  **`ml-api`**: A Python/Flask API service. It runs the "Seer" (EfficientNet) model for visual feature detection and calls the "Interpreter" (Google Gemini) for generating psychological reports.
+- **Frontend**: React SPA served by Nginx
+- **Backend**: Express API with JWT auth, connects to MongoDB Atlas and Cloudinary
+- **ML-API**: Flask API running Seer (EfficientNet) model + Gemini for report generation
 
-### Prerequisites
+---
 
--   [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose (v2.x) installed on your machine.
--   A local [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or Anaconda installation with a Python environment containing the required ML libraries (PyTorch, Timm, etc.).
--   A [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account for the database.
--   A [Cloudinary](https://cloudinary.com/) account for image storage.
--   A [Google AI Studio](https://aistudio.google.com/) API key for Gemini.
+## Prerequisites
 
-### One-Time Setup (Host Machine)
+- [Docker](https://www.docker.com/) and Docker Compose v2.x
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account
+- [Cloudinary](https://cloudinary.com/) account
+- [Google AI Studio](https://aistudio.google.com/) API key (for Gemini)
 
-#### Install Docker
+---
 
-Follow the official instructions for your operating system:
--   [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
--   [Install Docker Desktop on Mac](https://docs.docker.com/desktop/install/mac-install/)
--   [Install Docker Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/)
+## Configuration
 
-The latest versions of Docker include the `docker compose` plugin.
+### 1. Environment Variables
 
-#### Configure Docker Permissions (Linux Only)
+Copy the example file and fill in your credentials:
 
-To run Docker commands without `sudo`, you must add your user to the `docker` group.
+```bash
+cp .env.example .env
+```
 
-1.  Add your user to the `docker` group:
-    ```bash
-    sudo usermod -aG docker $USER
-    ```
+**Required Variables:**
 
-2.  **Log out and log back in.** This step is mandatory for the group changes to take effect. or Just restart your system.
+| Variable | Description |
+|----------|-------------|
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `JWT_SECRET` | Secret for JWT tokens (min 32 chars) |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `GOOGLE_API_KEY` | Google Gemini API key |
 
-3.  Verify by opening a new terminal and running `groups`. The output should include `docker`.
+### 2. ML Model
 
-### Configuration
+Ensure the trained model exists at:
+```
+ml-api/models/best_htp_classifier.pth
+```
 
-Before running the application, you need to configure the environment variables for each service.
+---
 
-#### Backend & Database
+## Development
 
-1.  Open the `docker-compose.yml` file in the root directory.
-2.  Locate the `backend` service definition.
-3.  Fill in the placeholder values in the `environment` section with your actual credentials:
-    ```yaml
-    environment:
-      MONGO_URI: "your_mongodb_atlas_connection_string"
-      JWT_SECRET: "choose_a_long_random_secret_string"
-      CLOUDINARY_CLOUD_NAME: "your_cloudinary_cloud_name"
-      CLOUDINARY_API_KEY: "your_cloudinary_api_key"
-      CLOUDINARY_API_SECRET: "your_cloudinary_api_secret"
-    ```
-
-#### ML API (Google Gemini)
-
-1.  Go to the `ml-api/` directory.
-2.  Rename the `.env.example` file to `.env` (or create it if it doesn't exist).
-3.  Add your Google Gemini API key to the `ml-api/.env` file:
-    ```ini
-    GOOGLE_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-    ```
-
-#### Conda Environment Volume (ML API)
-
-This setup is optimized for local development to avoid re-downloading large ML libraries. It mounts your local Conda environment's packages into the `ml-api` container.
-
-1.  Activate your Conda environment (e.g., `smai`):
-    ```bash
-    conda activate smai
-    ```
-
-2.  Find the exact path to its `site-packages`:
-    ```bash
-    python -c "import site; print(site.getsitepackages()[0])"
-    ```
-
-3.  Open `docker-compose.yml` and find the `volumes` section for the `ml-api` service.
-4.  **Replace the placeholder path** with the full path you just copied. Ensure the Python version in the path matches the one in `ml-api/Dockerfile.dev` (`python:3.13-slim`).
-    ```yaml
-    volumes:
-      - ./ml-api:/app
-      # Replace this line with your actual path
-      - /home/your_username/miniconda3/envs/smai/lib/python3.13/site-packages:/usr/local/lib/python3.13/site-packages
-    ```
-
-### Running the Application
-
-Once all configuration is complete, you can start the entire application stack with a single command from the root `dsi/` directory.
+### Starting the Dev Environment
 
 ```bash
 docker compose up --build
 ```
 
--   `--build`: This flag tells Docker Compose to build the images from the `Dockerfile`s before starting the containers. You only need to use it the first time or after making changes to a `Dockerfile` or source code that affects the image (like adding a dependency in `package.json`).
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5001
+- ML-API: http://localhost:5002
 
-The services will be available at:
--   **Frontend (Web App):** `http://localhost:3000`
--   **Backend API:** `http://localhost:5001`
--   **ML API:** `http://localhost:5002`
+### Hot Reloading
 
-You will see logs from all three services interleaved in your terminal.
+Code changes in `frontend/` and `backend/` directories automatically reload.
 
-### Stopping the Application
-
-To stop and remove all the running containers and the network, press `Ctrl+C` in the terminal where `docker compose` is running, and then run:
+### Adding Dependencies
 
 ```bash
-docker compose down
+# After modifying package.json
+docker compose up --build
 ```
 
-This will clean up the environment completely.
+---
 
-### Development Workflow
+## Production Deployment
 
-This setup is optimized for local development with **hot-reloading**.
+### Local Production Build
 
--   The `backend` and `frontend` source code is mounted as a volume. When you save a change in a file in either of these directories, the development server inside the container (`nodemon` for backend, `react-scripts` for frontend) will automatically detect the change and reload the application.
--   You do not need to rebuild the Docker images for simple code changes.
--   If you add a new dependency (e.g., run `npm install new-package`), you will need to rebuild the corresponding image by running `docker compose up --build`.
+```bash
+# Build all production images
+docker compose -f docker-compose.prod.yml build
 
-### Troubleshooting
+# Start in detached mode
+docker compose -f docker-compose.prod.yml up -d
 
--   **`Permission denied` error on `docker.sock`:** Your user is not in the `docker` group. See the [Configure Docker Permissions](#configure-docker-permissions-linux-only) section and remember to log out and back in.
--   **`ModuleNotFoundError: No module named 'torch'`:** The volume path for your Conda environment in `docker-compose.yml` is incorrect, or the Python versions do not match. Double-check the path using the command in the configuration section.
--   **`Conflict. The container name is already in use`:** An old container was not properly removed. Run `docker compose down` to clean up before trying again.
--   **Service fails to start:** Check the logs for that specific service in your terminal for error messages. For example, an incorrect `MONGO_URI` will cause the `backend` service to crash on startup.
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+
+# Stop
+docker compose -f docker-compose.prod.yml down
+```
+
+### Cloud Deployment (Railway)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed Railway deployment instructions.
+
+**Image Sizes:**
+| Image | Size |
+|-------|------|
+| Frontend | ~100 MB |
+| Backend | ~290 MB |
+| ML-API | ~2.5 GB |
+
+### Health Endpoints
+
+All services expose `/health` endpoints:
+
+```bash
+# Backend
+curl http://localhost:5001/health
+# {"status":"healthy","timestamp":"..."}
+
+# ML-API
+curl http://localhost:5002/health
+# {"status":"healthy","seer_model_loaded":true,...}
+```
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `Permission denied` on docker.sock | Add user to docker group: `sudo usermod -aG docker $USER` then logout/login |
+| Container name conflict | Run `docker compose down` before starting again |
+| ML-API unhealthy | Check logs: `docker logs tree-psych-ml-api-prod` |
+| Backend connection refused | Verify `MONGO_URI` is correct |
+| Frontend can't reach backend | Check `REACT_APP_API_URL` in build args |
+
+### Viewing Logs
+
+```bash
+# All services
+docker compose -f docker-compose.prod.yml logs -f
+
+# Specific service
+docker compose -f docker-compose.prod.yml logs -f ml-api
+```

@@ -1,9 +1,12 @@
-version: '3.8'
+# Production Docker Compose for Tree-psych-eval
+# Usage: docker compose -f docker-compose.prod.yml up --build
 
 services:
   # Backend Service
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
     container_name: tree-psych-backend-prod
     ports:
       - "5001:5001"
@@ -16,39 +19,96 @@ services:
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
       - ML_API_ENDPOINT=http://ml-api:5002/ml/analyze-drawing
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
     depends_on:
-      - ml-api
+      ml-api:
+        condition: service_healthy
     networks:
       - tree-psych-network
     restart: always
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # Frontend Service (Production Build with Nginx)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-/api}
     container_name: tree-psych-frontend-prod
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - tree-psych-network
     restart: always
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ML API Service
   ml-api:
-    build: ./ml-api
+    build:
+      context: ./ml-api
+      dockerfile: Dockerfile
     container_name: tree-psych-ml-api-prod
     ports:
       - "5002:5002"
     environment:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - FLASK_DEBUG=false
     networks:
       - tree-psych-network
-    volumes:
-      - /home/akmal-ali/miniconda3:/home/akmal-ali/miniconda3:ro
     restart: always
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5002/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s # ML models take time to load
+    deploy:
+      resources:
+        limits:
+          memory: 4G # ML models need more memory
+        reservations:
+          memory: 2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   tree-psych-network:

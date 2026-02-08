@@ -339,7 +339,17 @@ def analyze_size_and_placement(pil_image):
         return []
     return geometric_labels
 
-# --- 5. FLASK API ENDPOINT ---
+# --- 5. FLASK API ENDPOINTS ---
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for container orchestration."""
+    return jsonify({
+        'status': 'healthy',
+        'seer_model_loaded': seer_model is not None,
+        'gemini_configured': gemini_model is not None,
+        'vector_store_size': len(VECTOR_STORE)
+    }), 200
 
 @app.route('/ml/analyze-drawing', methods=['POST'])
 def analyze_drawing_endpoint():
@@ -416,4 +426,7 @@ def analyze_drawing_endpoint():
 
 if __name__ == '__main__':
     # Run the Flask app on port 5002 to avoid conflicts with other services
-    app.run(debug=True, port=5002)
+    # Note: In production, use gunicorn instead of the development server
+    import os
+    debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0', port=5002)

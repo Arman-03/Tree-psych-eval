@@ -1,12 +1,22 @@
-Flask
-python-dotenv
-torch
-torchvision
-timm
-Pillow
-google-generativeai
-gunicorn
-numpy
-opencv-python-headless
-sentence-transformers
-typing
+# Core web framework
+Flask==3.0.0
+gunicorn==21.2.0
+
+# Environment
+python-dotenv==1.0.0
+
+# ML/AI dependencies - CPU-only versions (smaller, works on free cloud tiers)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
+timm==0.9.12
+Pillow==10.1.0
+numpy==1.26.2
+opencv-python-headless==4.8.1.78
+
+# Google Gemini API
+google-generativeai==0.3.2
+
+# RAG dependencies - Pin to compatible version
+sentence-transformers==2.2.2
+transformers==4.36.0
